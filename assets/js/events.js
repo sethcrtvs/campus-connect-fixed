@@ -7,16 +7,7 @@ const Events = {
 
   init: async function () {
     if (typeof Auth !== "undefined" && !Auth.userData) await Auth.checkSession();
-    await this._loadMyInterests();
     this.loadEvents();
-  },
-
-  _loadMyInterests: async function () {
-    try {
-      const res = await fetch("api/events/get_my_interests.php");
-      const result = await res.json();
-      if (result.success) result.data.forEach(e => this.myInterests.add(e.event_id));
-    } catch (e) {}
   },
 
   openCreateModal: function () {
@@ -24,7 +15,7 @@ const Events = {
     if (window.userRole && authorized.includes(window.userRole.toLowerCase())) {
       UI.openModal("createEventModal");
     } else {
-      alert("Access denied. Only admins can publish events.");
+      showNotification("Access denied. Only admins can publish events.", "error");
     }
   },
 
@@ -38,6 +29,10 @@ const Events = {
       const result = await res.json();
       if (result.success) {
         this.allEvents = result.data;
+        // Populate myInterests from DB response (is_interested is 1 if user is interested)
+        this.myInterests = new Set(
+          result.data.filter(e => parseInt(e.is_interested) === 1).map(e => String(e.event_id))
+        );
         if (result.data.length === 0) {
           grid.innerHTML = `<div class="col-span-full text-center py-20 opacity-30"><i class="ri-calendar-todo-line text-5xl block mb-3"></i><p class="text-sm font-semibold">No upcoming events</p></div>`;
           return;
@@ -47,7 +42,7 @@ const Events = {
         grid.innerHTML = `<p class="col-span-full text-center text-red-400 text-sm mt-10">${result.message || "Could not load events."}</p>`;
       }
     } catch (e) {
-      grid.innerHTML = `<p class="col-span-full text-center text-red-400 text-sm mt-10">Connection error.</p>`;
+      grid.innerHTML = `<p class="col-span-full text-center text-red-400 text-sm mt-10">Connection error. Please try again.</p>`;
     }
   },
 
@@ -59,8 +54,8 @@ const Events = {
       const day   = d.getDate();
       const month = d.toLocaleString("default", { month: "short" }).toUpperCase();
       const time  = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const count = e.interest_count || 0;
-      const interested = this.myInterests.has(e.event_id) || this.myInterests.has(String(e.event_id));
+      const count = parseInt(e.interest_count) || 0;
+      const interested = this.myInterests.has(String(e.event_id));
       return `
         <div id="event_${e.event_id}" class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col">
           <div class="flex justify-between items-start mb-4">
@@ -82,8 +77,7 @@ const Events = {
               <p id="timer_${e.event_id}" class="text-xs font-bold text-gray-900 mt-0.5 tabular-nums">–</p>
             </div>
             <button onclick="Events.toggleInterest(${e.event_id}, this)"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
-                           ${interested ? 'bg-orange-600 text-white' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'}"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${interested ? 'bg-orange-600 text-white' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'}"
                     data-interested="${interested}">
               <i class="ri-heart-${interested ? 'fill' : 'line'} text-sm"></i>
               <span id="icount_${e.event_id}">${count}</span>
@@ -97,19 +91,20 @@ const Events = {
   toggleInterest: async function (eventId, btn) {
     try {
       const res = await fetch("api/events/toggle_interest.php", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event_id: eventId }),
       });
       const result = await res.json();
       if (!result.success) return;
-      const interested = result.data.interested;
-      const count = result.data.count;
 
-      if (interested) { this.myInterests.add(eventId); this.myInterests.add(String(eventId)); }
-      else { this.myInterests.delete(eventId); this.myInterests.delete(String(eventId)); }
+      const interested = result.data.interested;
+      const count      = result.data.count;
+
+      if (interested) this.myInterests.add(String(eventId));
+      else            this.myInterests.delete(String(eventId));
 
       btn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${interested ? 'bg-orange-600 text-white' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'}`;
-      btn.setAttribute("data-interested", interested);
       btn.querySelector("i").className = `ri-heart-${interested ? 'fill' : 'line'} text-sm`;
       document.getElementById(`icount_${eventId}`).textContent = count;
     } catch (e) { console.error(e); }
@@ -140,20 +135,23 @@ const Events = {
     const uniEl    = document.getElementById("event_uni_select");
     const university = uniEl ? uniEl.value : (window.userUni || "");
 
-    if (!title || !date || !location) { alert("Fill in title, date, and location."); return; }
+    if (!title || !date || !location) {
+      showNotification("Please fill in title, date, and location.", "error");
+      return;
+    }
     try {
       const res = await fetch("api/events/create_event.php", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description: desc, event_date: date, location, university, category }),
       });
       const result = await res.json();
       if (result.success) { UI.closeModal(); this.loadEvents(); }
-      else alert(result.message);
-    } catch (e) { alert("Failed to connect."); }
+      else showNotification(result.message, "error");
+    } catch (e) { showNotification("Failed to connect.", "error"); }
   },
 
   filterByUniversity: function (v) { this.loadEvents(v); },
-
   filterByCategory: function (c) {
     const filtered = c === "all" ? this.allEvents : this.allEvents.filter(e => e.category.toLowerCase() === c.toLowerCase());
     this.renderGrid(filtered);

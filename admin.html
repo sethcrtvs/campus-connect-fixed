@@ -19,6 +19,8 @@
 </head>
 <body class="flex min-h-screen">
 
+    <div id="notifToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[400] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none"></div>
+
     <!-- Sidebar -->
     <aside class="w-60 bg-white border-r border-gray-100 flex flex-col fixed h-full z-50">
         <div class="px-6 py-6">
@@ -120,6 +122,20 @@
         <div class="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-xl"></div>
     </div>
 
+
+        function showNotification(message, type = "info") {
+            const container = document.getElementById("notifToast");
+            if (!container) { alert(message); return; }
+            const colors = { success:"bg-green-600", error:"bg-red-600", info:"bg-gray-900", warning:"bg-amber-500" };
+            const icons  = { success:"ri-checkbox-circle-line", error:"ri-error-warning-line", info:"ri-information-line", warning:"ri-alert-line" };
+            const el = document.createElement("div");
+            el.className = `pointer-events-auto flex items-center gap-3 ${colors[type]||colors.info} text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold`;
+            el.innerHTML = `<i class="${icons[type]||icons.info} text-base shrink-0"></i><span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => { el.style.opacity="0"; el.style.transition="opacity 0.3s"; setTimeout(()=>el.remove(),300); }, 3500);
+        }
+        window.showNotification = showNotification;
+
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/admin.js"></script>
     <script>
@@ -141,6 +157,18 @@
             window.adminRole = user.role;
 
             AdminUI.init();
+
+            // super_admin: add "Student View" link in nav
+            if (user.role === 'super_admin') {
+                const nav = document.querySelector('aside nav.flex-1');
+                if (nav) {
+                    const a = document.createElement('a');
+                    a.href = 'dashboard.html';
+                    a.className = 'w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm mt-2 hover:bg-orange-50 transition';
+                    a.innerHTML = '<i class="ri-user-line text-base w-5 text-center"></i> Student View';
+                    nav.appendChild(a);
+                }
+            }
         });
     </script>
 </body>

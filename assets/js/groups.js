@@ -21,7 +21,7 @@ const Groups = {
       privacy: document.getElementById("privacy_setting").value,
     };
     if (!groupData.groupName || !groupData.category) {
-      alert("Group name and category are required.");
+      showNotification("Group name is required.", "error");
       return;
     }
     try {
@@ -35,10 +35,10 @@ const Groups = {
         UI.closeModal();
         this.loadSidebar();
       } else {
-        alert(result.message);
+        showNotification(result.message, result.success ? "success" : "error");
       }
     } catch (e) {
-      alert("Connection error.");
+      showNotification("Connection error. Please try again.", "error");
     }
   },
 
@@ -134,14 +134,14 @@ const Groups = {
         body: JSON.stringify({ groupId }),
       });
       const result = await res.json();
-      alert(result.message);
+      showNotification(result.message, result.success ? "success" : "error");
       if (result.success) this.loadSidebar();
-    } catch (e) { alert("Error joining group."); }
+    } catch (e) { showNotification("Error joining group.", "error"); }
   },
 
   joinByCode: async function () {
     const code = document.getElementById("invite_code_input").value.trim().toUpperCase();
-    if (!code) return alert("Enter an invite code.");
+    if (!code) return showNotification("Please enter an invite code.", "error");
     try {
       const res = await fetch("api/collaboration/join_by_code.php", {
         method: "POST",
@@ -149,9 +149,9 @@ const Groups = {
         body: JSON.stringify({ code }),
       });
       const result = await res.json();
-      alert(result.message);
+      showNotification(result.message, result.success ? "success" : "error");
       if (result.success) { UI.closeModal(); this.loadSidebar(); }
-    } catch (e) { alert("Error."); }
+    } catch (e) { showNotification("Something went wrong.", "error"); }
   },
 
   leaveGroup: async function (groupId) {
@@ -163,7 +163,7 @@ const Groups = {
         body: JSON.stringify({ groupId }),
       });
       const result = await res.json();
-      alert(result.message);
+      showNotification(result.message, "error");
       if (result.success) {
         UI.closeModal();
         this._stopPolling();
@@ -259,35 +259,32 @@ const Groups = {
         feed.innerHTML = result.data.map((msg) => {
           // System messages
           if (msg.is_system == 1) {
-            // Detect meeting links - render them nicely
-            if (msg.message_text.includes('meet.google.com') || msg.message_text.includes('Join Meeting')) {
-              const urlMatch = msg.message_text.match(/href='([^']+)'/);
-              const url = urlMatch ? urlMatch[1] : '#';
-              return `
-                <div class="flex justify-center my-3">
-                  <div class="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 flex items-center gap-3 max-w-xs">
-                    <i class="ri-video-chat-line text-orange-600 text-lg"></i>
-                    <div>
-                      <p class="text-xs font-semibold text-gray-700">Study session started</p>
-                      <a href="${url}" target="_blank" class="text-xs font-bold text-orange-600 hover:underline">Join Meeting →</a>
-                    </div>
-                  </div>
-                </div>`;
-            }
             return `<div class="flex justify-center my-2"><span class="bg-white text-gray-400 text-[10px] font-semibold py-1 px-3 rounded-full border border-gray-100">${this._escapeHtml(msg.message_text)}</span></div>`;
           }
 
           const isMe = msg.sender_id == myId;
-          // Check if it's a file link message from PHP
-          const isFileMsg = msg.message_text && msg.message_text.includes("Shared a file:");
           let bubbleContent;
-          if (isFileMsg) {
-            const nameMatch = msg.message_text.match(/>([^<]+)<\/a>/);
-            const urlMatch = msg.message_text.match(/href='([^']+)'/);
-            const fname = nameMatch ? nameMatch[1] : "File";
-            const furl = urlMatch ? urlMatch[1] : "#";
-            bubbleContent = `<div class="flex items-center gap-2"><i class="ri-file-line text-sm opacity-70"></i><a href="${furl}" target="_blank" class="underline font-semibold text-sm">${this._escapeHtml(fname)}</a></div>`;
-          } else {
+
+          // Format: FILE:https://url.com:filename.pdf (uploaded files)
+          if (msg.message_text && msg.message_text.startsWith('FILE:')) {
+            const parts = msg.message_text.split(':');
+            // parts[0]=FILE, parts[1]=https, parts[2]=//rest.of.url, parts[3]=filename
+            // Re-join url properly: parts[1]+':'+parts[2]
+            const furl = parts[1] + ':' + parts[2];
+            const fname = parts.slice(3).join(':') || 'File';
+            bubbleContent = `<div class="flex items-center gap-2"><i class="ri-file-line text-sm opacity-70 shrink-0"></i><a href="${furl}" target="_blank" class="underline font-semibold text-sm break-all">${this._escapeHtml(fname)}</a></div>`;
+          }
+          // Plain URL in message (e.g. meeting link posted as regular message)
+          else if (msg.message_text && msg.message_text.match(/https?:\/\/[^\s]+/)) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const escaped = this._escapeHtml(msg.message_text);
+            const linked = escaped.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+              const cleanUrl = url.replace(/&amp;/g,'&');
+              return `<a href="${cleanUrl}" target="_blank" class="${isMe ? 'text-orange-100 underline' : 'text-orange-600 underline'} break-all">${url}</a>`;
+            });
+            bubbleContent = `<p class="text-sm leading-relaxed">${linked}</p>`;
+          }
+          else {
             bubbleContent = `<p class="text-sm leading-relaxed">${this._escapeHtml(msg.message_text)}</p>`;
           }
 
@@ -341,7 +338,7 @@ const Groups = {
       if (result.success) this.loadMessages(groupId);
       else alert(result.message || "Upload failed.");
       input.value = "";
-    } catch (e) { alert("Upload failed."); }
+    } catch (e) { showNotification("Upload failed.", "error"); }
   },
 
   loadResources: async function (groupId) {
@@ -457,9 +454,9 @@ const Groups = {
           });
           this.viewTasks(groupId);
         } else {
-          alert(uploadResult.message || "Upload failed.");
+          showNotification(uploadResult.message || "Upload failed.", "error");
         }
-      } catch (e) { alert("Upload error."); }
+      } catch (e) { showNotification("Upload error. Please try again.", "error"); }
     };
     inp.click();
   },
@@ -467,7 +464,7 @@ const Groups = {
   createTask: async function (groupId) {
     const taskName = document.getElementById("newTaskName").value.trim();
     const assignedTo = document.getElementById("taskAssignee").value;
-    if (!taskName) return alert("Enter a task description.");
+    if (!taskName) return showNotification("Please enter a task description.", "error");
     try {
       await fetch("api/collaboration/tasks.php", {
         method: "POST",
@@ -619,7 +616,7 @@ const Groups = {
   },
 
   copyCode: function (code) {
-    navigator.clipboard.writeText(code).then(() => alert("Invite code copied!"));
+    navigator.clipboard.writeText(code).then(() => showNotification("Invite code copied!", "success"));
   },
 
   startMeeting: async function (groupId) {

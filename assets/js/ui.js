@@ -215,6 +215,14 @@ const UI = {
     }
   },
 
+
+  showNotification: (message, type = "info") => {
+    if (typeof window.showNotification === 'function') {
+      window.showNotification(message, type);
+    } else {
+      alert(message);
+    }
+  },
   openModal: (type, data = {}) => {
     const body = document.getElementById("modalBody");
     const overlay = document.getElementById("modalOverlay");

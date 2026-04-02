@@ -5,43 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Account | Campus Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
-        .otp-input:focus { border-color: #EA580C; box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); }
+        body { font-family: 'Outfit', sans-serif; }
         .bg-orange-gradient { background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); }
+        .otp-input:focus { border-color: #EA580C; box-shadow: 0 0 0 3px rgba(234,88,12,0.12); outline: none; background: white; }
     </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-6">
 
-    <div class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl shadow-orange-100 p-10 text-center border border-gray-50 animate-in fade-in zoom-in duration-500">
-        <div class="w-20 h-20 bg-orange-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
-            <i class="ri-mail-check-line text-4xl text-orange-600"></i>
+    <!-- Notification toast -->
+    <div id="notifToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[400] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none"></div>
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-orange-100/50 p-10 text-center border border-gray-100">
+        <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <i class="ri-mail-check-line text-3xl text-orange-600"></i>
         </div>
 
-        <h1 class="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-2">Check Your Inbox</h1>
-        <p class="text-gray-400 text-sm font-medium mb-10 leading-relaxed">
-            We sent a 6-digit verification code to <br>
-            <span id="displayEmail" class="text-orange-600 font-bold">your student email</span>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Check your inbox</h1>
+        <p class="text-gray-400 text-sm mb-8 leading-relaxed">
+            We sent a 6-digit code to<br>
+            <span id="displayEmail" class="text-orange-600 font-semibold">your university email</span>
         </p>
 
-        <div id="otp-container" class="flex justify-between gap-2 mb-10">
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white" autofocus>
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white">
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white">
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white">
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white">
-            <input type="text" maxlength="1" class="otp-input w-12 h-16 text-center text-2xl font-black bg-gray-50 border-2 border-transparent rounded-2xl outline-none transition-all focus:bg-white">
+        <div id="otp-container" class="flex justify-between gap-2 mb-8">
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition" autofocus>
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition">
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition">
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition">
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition">
+            <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold bg-gray-50 border-2 border-transparent rounded-xl transition">
         </div>
 
-        <button id="verifyBtn" class="w-full py-5 bg-orange-gradient text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-orange-200 hover:scale-[1.02] active:scale-95 transition-all">
+        <button id="verifyBtn"
+            class="w-full py-4 bg-orange-gradient text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-orange-200 hover:opacity-95 active:scale-95 transition-all">
             Verify Account
         </button>
 
-        <p class="mt-8 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            Didn't get a code? <a href="#" id="resendOtp" class="text-orange-600 hover:underline">Resend OTP</a>
+        <p class="mt-6 text-xs text-gray-400">
+            Didn't get a code?
+            <a href="#" id="resendOtp" class="text-orange-600 font-semibold hover:underline">Resend code</a>
         </p>
     </div>
 
-    <script src="assets/js/verify.js"></script>
+    <script>
+        function showNotification(message, type = "info") {
+            const container = document.getElementById("notifToast");
+            if (!container) { alert(message); return; }
+            const colors = { success:"bg-green-600", error:"bg-red-600", info:"bg-gray-900", warning:"bg-amber-500" };
+            const icons  = { success:"ri-checkbox-circle-line", error:"ri-error-warning-line", info:"ri-information-line", warning:"ri-alert-line" };
+            const el = document.createElement("div");
+            el.className = `pointer-events-auto flex items-center gap-3 ${colors[type]||colors.info} text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold`;
+            el.innerHTML = `<i class="${icons[type]||icons.info} text-base shrink-0"></i><span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => { el.style.opacity="0"; el.style.transition="opacity 0.3s"; setTimeout(()=>el.remove(),300); }, 3500);
+        }
+
+        const email = localStorage.getItem('pending_verification_email') || '';
+        document.getElementById('displayEmail').textContent = email || 'your university email';
+
+        // OTP input auto-advance
+        const inputs = document.querySelectorAll('.otp-input');
+        inputs.forEach((inp, i) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '').slice(0,1);
+                if (inp.value && i < inputs.length - 1) inputs[i+1].focus();
+            });
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i-1].focus();
+            });
+            inp.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+                [...text].slice(0,6).forEach((ch, j) => { if (inputs[i+j]) inputs[i+j].value = ch; });
+                const next = Math.min(i + text.length, 5);
+                inputs[next].focus();
+            });
+        });
+
+        document.getElementById('verifyBtn').addEventListener('click', async () => {
+            const otp = [...inputs].map(i => i.value).join('');
+            if (otp.length < 6) {
+                showNotification("Invalid or expired verification code.", "error");
+                return;
+            }
+            const btn = document.getElementById('verifyBtn');
+            btn.textContent = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                const res    = await fetch('api/auth/verify_otp.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, action: 'verify' })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    localStorage.removeItem('pending_verification_email');
+                    showNotification("Email verified! Redirecting...", "success");
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+                } else {
+                    showNotification(result.message || "Invalid or expired verification code.", "error");
+                    btn.textContent = "Verify Account";
+                    btn.disabled = false;
+                    inputs.forEach(i => i.value = '');
+                    inputs[0].focus();
+                }
+            } catch (e) {
+                showNotification("Connection error. Please try again.", "error");
+                btn.textContent = "Verify Account";
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('resendOtp').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const res    = await fetch('api/auth/verify_otp.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, action: 'resend' })
+                });
+                const result = await res.json();
+                showNotification(result.message, result.success ? "success" : "error");
+            } catch (e) {
+                showNotification("Connection error.", "error");
+            }
+        });
+    </script>
 </body>
 </html>

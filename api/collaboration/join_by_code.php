@@ -3,22 +3,31 @@ require_once '../../includes/functions.php';
 require_once '../config/database.php';
 securePage();
 
-$data = json_decode(file_get_contents("php://input"), true);
-$code = strtoupper(trim($data['code'] ?? ''));
+$data   = json_decode(file_get_contents("php://input"), true);
+$code   = strtoupper(trim($data['code'] ?? ''));
 $userId = $_SESSION['user_id'];
 
+if (!$code) sendResponse(false, "Please enter an invite code.");
+
 try {
-    // Find the group with this code
-    $sql = "SELECT group_id FROM groups WHERE invite_code = ?";
-    $res = dbQuery($conn, $sql, [$code]);
-    $group = $res->fetch();
+    $group = dbQuery($conn, "SELECT group_id, group_name FROM groups WHERE invite_code = ?", [$code])->fetch(PDO::FETCH_ASSOC);
 
     if (!$group) {
-        sendResponse(false, "Invalid Invite Code.");
-        exit;
+        sendResponse(false, "Group does not exist. Check your code and try again.");
     }
 
-    // Logic to add member (same as join_group.php)
-    // ... (insert into group_members, update count)
-    sendResponse(true, "Successfully joined via code!");
-} catch (Exception $e) { sendResponse(false, "System error."); }
+    $groupId = $group['group_id'];
+
+    // Already a member?
+    $existing = dbQuery($conn,
+        "SELECT member_id FROM group_members WHERE group_id = ? AND user_id = ?",
+        [$groupId, $userId]
+    )->fetch();
+
+    if ($existing) sendResponse(false, "You are already a member of this group.");
+
+    dbQuery($conn, "INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'member')", [$groupId, $userId]);
+    sendResponse(true, "Successfully joined " . $group['group_name'] . "!");
+} catch (Exception $e) {
+    sendResponse(false, "System error: " . $e->getMessage());
+}

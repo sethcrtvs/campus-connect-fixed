@@ -22,44 +22,56 @@
 </head>
 <body class="flex min-h-screen">
 
-    <!-- Toast notification -->
-    <div id="sysToast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] hidden">
-        <div class="bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-2xl flex items-center gap-2">
-            <i class="ri-information-line text-orange-400"></i>
-            <span id="sysToastMsg"></span>
-        </div>
-    </div>
-
     <!-- Sidebar -->
+        <!-- Notification toast -->
+    <div id="notifToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[400] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none" style="top:1.25rem"></div>
+
     <aside class="w-60 bg-white border-r border-gray-100 flex flex-col fixed h-full z-50 shrink-0">
         <div class="px-6 py-6">
             <h1 class="text-lg font-black text-gray-900 tracking-tight">Campus<span class="text-orange-600">Connect</span></h1>
         </div>
+
         <nav class="flex-1 px-3 space-y-0.5 overflow-y-auto no-scrollbar">
             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest px-3 pt-1 pb-2">Main</p>
-            <button onclick="UI.showView('home')" id="btn-home" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm active">
+
+            <button onclick="UI.showView('home')" id="btn-home"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm active">
                 <i class="ri-dashboard-line text-base w-5 text-center"></i> Dashboard
             </button>
-            <button onclick="UI.showView('groups')" id="btn-groups" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
+
+            <button onclick="UI.showView('groups')" id="btn-groups"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
                 <i class="ri-group-2-line text-base w-5 text-center"></i> My Groups
             </button>
-            <button onclick="UI.showView('messages')" id="btn-messages" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
+
+            <button onclick="UI.showView('messages')" id="btn-messages"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
                 <i class="ri-message-3-line text-base w-5 text-center"></i> Messages
             </button>
+
             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest px-3 pt-5 pb-2">Academic</p>
-            <button onclick="Resources.init(window.userRole)" id="btn-resources" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
+
+            <button onclick="Resources.init(window.userRole, Auth.userData ? Auth.userData.user_id : null)" id="btn-resources"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
                 <i class="ri-book-read-line text-base w-5 text-center"></i> Resource Hub
             </button>
-            <button onclick="UI.showView('events')" id="btn-events" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
+
+            <button onclick="UI.showView('events')" id="btn-events"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
                 <i class="ri-calendar-event-line text-base w-5 text-center"></i> Campus Events
             </button>
+
             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest px-3 pt-5 pb-2">Account</p>
-            <button onclick="window.location.href='profile.html'" class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
+
+            <button onclick="window.location.href='profile.html'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 rounded-xl nav-link text-sm">
                 <i class="ri-user-settings-line text-base w-5 text-center"></i> My Profile
             </button>
         </nav>
+
         <div class="p-4 border-t border-gray-100">
-            <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-3 py-2.5 text-red-400 hover:bg-red-50 rounded-xl transition text-sm font-semibold">
+            <button onclick="Auth.logout()"
+                class="w-full flex items-center gap-3 px-3 py-2.5 text-red-400 hover:bg-red-50 rounded-xl transition text-sm font-semibold">
                 <i class="ri-logout-box-r-line text-base"></i> Sign Out
             </button>
         </div>
@@ -67,8 +79,11 @@
 
     <!-- Main -->
     <main class="flex-1 ml-60 min-h-screen flex flex-col">
+
+        <!-- Top bar -->
         <div class="px-8 py-4 flex justify-end items-center sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b border-gray-100">
-            <div onclick="window.location.href='profile.html'" class="flex items-center gap-3 cursor-pointer group px-3 py-1.5 rounded-xl hover:bg-gray-50 transition">
+            <div onclick="window.location.href='profile.html'"
+                 class="flex items-center gap-3 cursor-pointer group px-3 py-1.5 rounded-xl hover:bg-gray-50 transition">
                 <div class="text-right hidden md:block">
                     <p id="navUserName" class="text-sm font-bold text-gray-900 leading-tight">Student</p>
                     <p class="text-[10px] text-orange-600 font-semibold">Active</p>
@@ -80,73 +95,59 @@
 
         <!-- Home view -->
         <div id="homeView" class="p-8">
-            <header class="flex justify-between items-start mb-8">
+            <header class="flex justify-between items-start mb-10">
                 <div>
                     <h2 class="text-4xl font-black text-gray-900 tracking-tight leading-none">
                         Hello, <span id="welcomeName" class="text-orange-600">there</span>! 👋
                     </h2>
                     <p class="text-gray-400 font-medium mt-2 text-sm" id="userUni">Loading...</p>
                 </div>
-                <span id="navUserRole" class="text-xs font-bold text-white bg-gray-900 px-4 py-2 rounded-full uppercase tracking-widest shadow mt-1">Student</span>
+                <span id="navUserRole" class="text-xs font-bold text-white bg-gray-900 px-4 py-2 rounded-full uppercase tracking-widest shadow">Student</span>
             </header>
 
-            <!-- Stat cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-                <!-- Active groups -->
-                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer" onclick="UI.showView('groups')">
+                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl shrink-0">
-                            <i class="ri-group-2-line"></i>
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="ri-message-3-line"></i>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">My Groups</p>
-                            <p id="groupCounter" class="text-3xl font-black text-gray-900">–</p>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Messages</p>
+                            <p class="text-3xl font-black text-gray-900">0</p>
                         </div>
                     </div>
                 </div>
-                <!-- Events I'm interested in -->
-                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer" onclick="UI.showView('events')">
+
+                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl shrink-0">
-                            <i class="ri-heart-line"></i>
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="ri-calendar-todo-line"></i>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Interested Events</p>
-                            <p id="interestCounter" class="text-3xl font-black text-gray-900">–</p>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Next Event</p>
+                            <p id="eventWidget" class="text-base font-bold text-gray-900 leading-tight mt-0.5 truncate max-w-[140px]">None</p>
                         </div>
                     </div>
                 </div>
-                <!-- Friends -->
-                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer" onclick="UI.showView('messages')">
+
+                <div class="stat-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl shrink-0">
-                            <i class="ri-user-heart-line"></i>
+                        <div class="w-12 h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center text-xl">
+                            <i class="ri-shield-check-line"></i>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Connections</p>
-                            <p id="friendCounter" class="text-3xl font-black text-gray-900">–</p>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Security</p>
+                            <p class="text-3xl font-black text-gray-900">Active</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Interested events list -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-gray-900">Events you're interested in</h3>
-                    <button onclick="UI.showView('events')" class="text-xs text-orange-600 font-semibold hover:underline">View all →</button>
-                </div>
-                <div id="interestedEventsList" class="space-y-3">
-                    <p class="text-xs text-gray-400">Loading...</p>
-                </div>
-            </div>
-
-            <!-- Hero -->
             <div class="bg-gradient-to-br from-gray-900 via-orange-950 to-gray-900 rounded-3xl p-12 text-white relative overflow-hidden shadow-xl">
                 <div class="relative z-10 max-w-lg">
                     <h2 class="text-3xl font-black mb-4 leading-tight tracking-tight">Your academic hub is ready.</h2>
                     <p class="text-orange-200 text-sm mb-8 leading-relaxed">Collaborate in groups, access faculty resources, and stay updated with campus events.</p>
-                    <button onclick="Resources.init(window.userRole)"
+                    <button onclick="Resources.init(window.userRole, Auth.userData ? Auth.userData.user_id : null)"
                         class="bg-orange-600 hover:bg-orange-500 text-white px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition hover:scale-105 active:scale-95 shadow-lg shadow-orange-900/50">
                         Explore Hub
                     </button>
@@ -175,12 +176,25 @@
     <script src="assets/js/events.js"></script>
 
     <script>
-        function showToast(msg) {
-            const t = document.getElementById('sysToast');
-            document.getElementById('sysToastMsg').textContent = msg;
-            t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 3500);
+
+        function showNotification(message, type = "info") {
+            const container = document.getElementById("notifToast");
+            if (!container) { alert(message); return; }
+            const colors = {
+                success: "bg-green-600",
+                error:   "bg-red-600",
+                info:    "bg-gray-900",
+                warning: "bg-amber-500",
+            };
+            const icons = { success: "ri-checkbox-circle-line", error: "ri-error-warning-line", info: "ri-information-line", warning: "ri-alert-line" };
+            const el = document.createElement("div");
+            el.className = `pointer-events-auto flex items-center gap-3 ${colors[type] || colors.info} text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold animate-in slide-in-from-top duration-300`;
+            el.innerHTML = `<i class="${icons[type] || icons.info} text-base shrink-0"></i><span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; setTimeout(() => el.remove(), 300); }, 3500);
         }
+        window.showNotification = showNotification;
+
 
         async function loadDashboardStats() {
             try {
@@ -189,13 +203,16 @@
                     fetch('api/events/get_my_interests.php').then(r => r.json()),
                     fetch('api/social/get_friends.php').then(r => r.json()),
                 ]);
-                if (gRes.success) document.getElementById('groupCounter').textContent = gRes.data.length;
-                if (iRes.success) {
-                    document.getElementById('interestCounter').textContent = iRes.data.length;
+                const gCount = document.getElementById('groupCounter');
+                const iCount = document.getElementById('interestCounter');
+                const fCount = document.getElementById('friendCounter');
+                if (gRes.success && gCount) gCount.textContent = gRes.data.length;
+                if (iRes.success && iCount) {
+                    iCount.textContent = iRes.data.length;
                     renderInterestedEvents(iRes.data);
                 }
-                if (fRes.success) document.getElementById('friendCounter').textContent = fRes.data.length;
-            } catch (e) { console.error(e); }
+                if (fRes.success && fCount) fCount.textContent = fRes.data.length;
+            } catch(e) { console.error(e); }
         }
 
         function renderInterestedEvents(events) {
@@ -205,7 +222,7 @@
                 list.innerHTML = `<p class="text-xs text-gray-400">You haven't marked any events as interested yet.</p>`;
                 return;
             }
-            list.innerHTML = events.slice(0, 3).map(e => {
+            list.innerHTML = events.slice(0,3).map(e => {
                 const d = new Date(e.event_date);
                 return `
                   <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
@@ -219,24 +236,24 @@
                         <p class="text-[10px] text-gray-400">${e.location} · ${e.category}</p>
                       </div>
                     </div>
-                    <span class="text-[10px] bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full font-semibold">${e.interest_count} interested</span>
+                    <span class="text-[10px] bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full font-semibold">${e.interest_count || 0} interested</span>
                   </div>`;
             }).join('');
             if (events.length > 3) {
-                list.innerHTML += `<p class="text-xs text-gray-400 text-center pt-1">+${events.length - 3} more — <button onclick="UI.showView('events')" class="text-orange-600 font-semibold hover:underline">View all events</button></p>`;
+                list.innerHTML += `<p class="text-xs text-gray-400 text-center pt-2">+${events.length - 3} more · <button onclick="UI.showView('events')" class="text-orange-600 font-semibold hover:underline">View all</button></p>`;
             }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             const user = await Auth.checkSession();
             if (!user) {
-                showToast('Please log in first.');
-                setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+                showNotification('Please log in first.', 'info');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1200);
                 return;
             }
 
-            // Redirect admins to their own portal
-            if (user.role === 'uni_admin' || user.role === 'super_admin') {
+            // uni_admin goes straight to admin panel
+            if (user.role === 'uni_admin') {
                 window.location.href = 'admin.html';
                 return;
             }
@@ -246,12 +263,25 @@
             document.getElementById('navUserName').textContent = user.full_name;
             document.getElementById('userUni').textContent = user.university;
             document.getElementById('navUserRole').textContent = (user.role || 'student').replace('_', ' ');
-            window.userUni = user.university;
+            window.userUni  = user.university;
+            window.userRole = user.role;
 
             const avatar = user.profile_pic
                 ? user.profile_pic
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=EA580C&color=fff`;
             document.getElementById('navUserAvatar').src = avatar;
+
+            // super_admin: inject "Admin Panel" link at bottom of sidebar nav
+            if (user.role === 'super_admin') {
+                const nav = document.querySelector('aside nav.flex-1');
+                if (nav) {
+                    const a = document.createElement('a');
+                    a.href = 'admin.html';
+                    a.className = 'w-full flex items-center gap-3 px-3 py-2.5 text-orange-600 bg-orange-50 rounded-xl text-sm font-semibold mt-2 hover:bg-orange-100 transition';
+                    a.innerHTML = '<i class="ri-admin-line text-base w-5 text-center"></i> Switch to Admin';
+                    nav.appendChild(a);
+                }
+            }
 
             UI.showView('home');
             loadDashboardStats();

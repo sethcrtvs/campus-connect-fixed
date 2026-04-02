@@ -121,7 +121,7 @@ const AdminUI = {
       });
       const result = await res.json();
       if (result.success) {
-        this.toast('Resource verified!');
+        showNotification('Resource verified!', 'success');
         this.loadResources(this.currentResourceFilter);
         this.loadPendingResources();
         document.getElementById('statPending') && this.loadStats();
@@ -140,7 +140,7 @@ const AdminUI = {
         body: `resource_id=${id}`
       });
       const result = await res.json();
-      if (result.success) { this.toast('Deleted.'); this.loadResources(this.currentResourceFilter); }
+      if (result.success) { showNotification('Resource deleted.', 'success'); this.loadResources(this.currentResourceFilter); }
       else alert(result.message);
     } catch (e) { console.error(e); }
   },
@@ -227,7 +227,7 @@ const AdminUI = {
         body: JSON.stringify({ title, event_date: date, location, description: desc, category, university: window.adminUni })
       });
       const result = await res.json();
-      if (result.success) { this.closeModal(); this.toast('Event published!'); this.loadEvents(); }
+      if (result.success) { this.closeModal(); showNotification('Event published!', 'success'); this.loadEvents(); }
       else alert(result.message);
     } catch (e) { alert('Connection error.'); }
   },
